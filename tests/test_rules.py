@@ -5,7 +5,8 @@ Questi test verificano che le tre funzioni pure del modulo rules
 (is_even, is_vowel, compute_expected_answer) si comportino come la
 specifica richiede.
 
-Per lanciarli: pytest tests/test_rules.py
+Per lanciarli: python -m pytest tests/test_rules.py
+
 """
 
 import pytest

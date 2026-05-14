@@ -2,6 +2,9 @@ from dataclasses import dataclass
 
 @dataclass
 class Trial:
+    """
+    Rappresenta una singola prova del gioco
+    """
     position: str
     letter: str
     number: int

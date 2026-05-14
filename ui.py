@@ -3,11 +3,19 @@ from config import *
 from models import Trial
 
 def draw_card(surface: pygame.Surface, trial: Trial, is_correct: bool):
+    """
+    Disegna la carta sullo schermo
+    
+    Args:
+        surface: La superficie di disegno
+        trial: La carta da disegnare
+        is_correct: Se la risposta è corretta
+    """
     x = (surface.get_width() - CARD_W) // 2
     if trial.position.upper() == "TOP":
-        y = 50
+        y = 110
     else:
-        y = surface.get_height() - CARD_H - 50
+        y = surface.get_height() - CARD_H - 110
     card_rect = pygame.Rect(x, y, CARD_W, CARD_H)
 
     color = (255, 255, 255)
@@ -27,6 +35,13 @@ def draw_card(surface: pygame.Surface, trial: Trial, is_correct: bool):
     surface.blit(text_surf, text_rect)
 
 def draw_timer(surface: pygame.Surface, elapsed: float):
+    """
+    Disegna il timer sullo schermo
+    
+    Args:
+        surface: La superficie di disegno
+        elapsed: Il tempo trascorso
+    """
     # Calcolo i secondi rimanenti
     time_left = max(0, 60 - int(elapsed))
     
@@ -38,10 +53,19 @@ def draw_timer(surface: pygame.Surface, elapsed: float):
     
     text_surf = font.render(text_str, True, color)
     # Lo posiziono in alto al centro
-    text_rect = text_surf.get_rect(center=(surface.get_width() // 2, 20))
+    text_rect = text_surf.get_rect(center=(surface.get_width() // 2, 40))
     surface.blit(text_surf, text_rect)
 
 def draw_results(surface: pygame.Surface, score: int, correct: int, wrong: int):
+    """
+    Disegna i risultati finali sullo schermo
+    
+    Args:
+        surface: La superficie di disegno
+        score: Il punteggio finale
+        correct: Il numero di risposte corrette
+        wrong: Il numero di risposte errate
+    """
     total = correct + wrong
     if total > 0:
         accuracy = (correct / total) * 100
@@ -70,3 +94,19 @@ def draw_results(surface: pygame.Surface, score: int, correct: int, wrong: int):
     surface.blit(wrong_surf, wrong_surf.get_rect(center=(center_x, 300)))
     surface.blit(acc_surf, acc_surf.get_rect(center=(center_x, 340)))
     surface.blit(restart_surf, restart_surf.get_rect(center=(center_x, 450)))
+
+def draw_rules(surface: pygame.Surface):
+    """
+    Disegna le regole del gioco sullo schermo
+    
+    Args:
+        surface: La superficie di disegno
+    """
+    x = surface.get_width() // 2
+    y = 70
+
+    font_text = pygame.font.SysFont("Arial", 15)
+    message = f"Premi freccia destra se la carta è in alto e il numero è pari, altrimenti premi freccia sinistra"
+    text_surf = font_text.render(message, True, (255, 255, 255))
+    text_rect = text_surf.get_rect(center=(x, y))
+    surface.blit(text_surf, text_rect)

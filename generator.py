@@ -4,6 +4,15 @@ from string import ascii_uppercase
 import random
 
 def generate_trial(rng: random.Random) -> Trial:
+    """
+    Genera una singola prova del gioco
+    
+    Args:
+        rng: Il generatore di numeri casuali
+    
+    Returns:
+        Una prova del gioco
+    """
     position = rng.choice(['TOP', 'BOTTOM'])
     letter = rng.choice(ascii_uppercase) # utilizziamo ascii_uppercase perché contiene le lettere dell'alfabeto
     number = rng.randint(1, 9)
