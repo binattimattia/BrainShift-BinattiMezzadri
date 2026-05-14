@@ -6,6 +6,6 @@ class Trial:
     letter: str
     number: int
     expected_answer: bool
-    is_correct: bool = False
+    is_correct: bool = None
     user_answer: bool | None = None
     

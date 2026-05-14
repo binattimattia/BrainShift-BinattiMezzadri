@@ -17,13 +17,21 @@ def main():
     correct_answers = 0
     wrong_answers = 0
     state = "PLAYING"
+    feedback_until = 0
+    need_new_trial = False
+    last_answer_correct = None
 
     while running:
         # Aggiornamento logica di gioco e tempo
         if state == "PLAYING":
             elapsed = time.time() - start_time
-            if elapsed >= 2:
+            if elapsed >= 60:
                 state = "RESULTS"
+            
+            # Genera la nuova carta solo quando scade il timer del feedback
+            if time.time() >= feedback_until and need_new_trial:
+                trial = generate_trial(random.Random())
+                need_new_trial = False
 
         # Gestione degli Eventi
         for event in pygame.event.get():
@@ -36,7 +44,7 @@ def main():
                 if event.key == pygame.K_ESCAPE:
                     running = False
                 
-                if state == "PLAYING":
+                if state == "PLAYING" and time.time() >= feedback_until:
                     # Se premo FRECCIA DESTRA
                     if event.key == pygame.K_RIGHT:
                         user_answer = True
@@ -46,7 +54,10 @@ def main():
                             correct_answers += 1
                         else:
                             wrong_answers += 1
-                        trial = generate_trial(random.Random())
+                        last_answer_correct = is_correct
+                        need_new_trial = True
+                        feedback_until = time.time() + 0.15
+
                     # Se premo FRECCIA SINISTRA
                     elif event.key == pygame.K_LEFT:
                         user_answer = False
@@ -56,7 +67,9 @@ def main():
                             correct_answers += 1
                         else:
                             wrong_answers += 1
-                        trial = generate_trial(random.Random())
+                        last_answer_correct = is_correct
+                        need_new_trial = True
+                        feedback_until = time.time() + 0.15
                 
                 if state == "RESULTS":
                     # Se premo R, resetto il gioco
@@ -72,7 +85,11 @@ def main():
         screen.fill((0, 0, 0)) # Colore nero
         
         if state == "PLAYING":
-            draw_card(screen, trial)
+            if time.time() < feedback_until:
+                draw_card(screen, trial, last_answer_correct)
+            else:
+                draw_card(screen, trial, None)
+            
             draw_timer(screen, elapsed)
         elif state == "RESULTS":
             draw_results(screen, score, correct_answers, wrong_answers)
