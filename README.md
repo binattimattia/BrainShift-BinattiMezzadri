@@ -4,9 +4,8 @@
 
 ## Chi siamo
 
-- Nome Cognome 1 — email / handle GitHub
-- Nome Cognome 2 — email / handle GitHub
-- (eventuale terzo membro se siete un trio)
+- Mattia Binatti — binattimattia@gmail.com / @binattimattia
+- Jason Mezzadri — mezzadrijason@gmail.com / @JasonMezzadri
 
 Classe 4A Informatica — a.s. 2025-26.
 

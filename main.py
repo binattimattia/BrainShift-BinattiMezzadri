@@ -71,7 +71,7 @@ def main():
                         wrong_answers = 0
                         trial = generate_trial(rng)
 
-        screen.fill((0, 0, 0)) # Colore nero
+        screen.fill(COLOR_BG) 
         
         if state == "PLAYING":
             if time.time() < feedback_until:
@@ -80,7 +80,7 @@ def main():
                 draw_card(screen, trial, None)
             
             if correct_answers < 10:
-                draw_rules(screen)
+                draw_rules(screen, trial)
             
             draw_timer(screen, elapsed)
         elif state == "RESULTS":

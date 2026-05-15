@@ -13,24 +13,24 @@ def draw_card(surface: pygame.Surface, trial: Trial, is_correct: bool):
     """
     x = (surface.get_width() - CARD_W) // 2
     if trial.position.upper() == "TOP":
-        y = 110
+        y = surface.get_height() - CARD_H - 400
     else:
         y = surface.get_height() - CARD_H - 110
     card_rect = pygame.Rect(x, y, CARD_W, CARD_H)
 
-    color = (255, 255, 255)
+    color = COLOR_WHITE
 
     if is_correct:
-        color = (0, 255, 0)
+        color = COLOR_GREEN
     if is_correct is False:
-        color = (255, 0, 0)
+        color = COLOR_RED
 
-    pygame.draw.rect(surface, color, card_rect)
-    pygame.draw.rect(surface, (0, 0, 0), card_rect, 3)
+    pygame.draw.rect(surface, color, card_rect, border_radius=15)
+    pygame.draw.rect(surface, COLOR_BLACK, card_rect, 3, border_radius=15)
 
-    font = pygame.font.SysFont("Arial", 48, bold=True)
+    font = pygame.font.Font("fonts/Ubuntu-Bold.ttf", 80)
     text_str = f"{trial.letter}{trial.number}"
-    text_surf = font.render(text_str, True, (0, 0, 0))
+    text_surf = font.render(text_str, True, COLOR_YELLOW)
     text_rect = text_surf.get_rect(center=card_rect.center)
     surface.blit(text_surf, text_rect)
 
@@ -42,18 +42,40 @@ def draw_timer(surface: pygame.Surface, elapsed: float):
         surface: La superficie di disegno
         elapsed: Il tempo trascorso
     """
-    # Calcolo i secondi rimanenti
-    time_left = max(0, 60 - int(elapsed))
+    # Calcolo il tempo rimanente e la percentuale per la barra
+    time_left = max(0, 60 - elapsed)
+    ratio = time_left / 60.0
     
-    font = pygame.font.SysFont("Arial", 36, bold=True)
-    text_str = f"Tempo: {time_left}s"
+    # Dimensioni della barra
+    max_width = 600
+    height = 40
+    current_width = int(max_width * ratio)
     
-    # Se mancano meno di 10 secondi, lo coloro di rosso per attirare l'attenzione
-    color = (255, 50, 50) if time_left <= 10 else (255, 255, 255)
+    # Posizione (centrata in alto)
+    x = (surface.get_width() - max_width) // 2
+    y = 20
     
-    text_surf = font.render(text_str, True, color)
-    # Lo posiziono in alto al centro
-    text_rect = text_surf.get_rect(center=(surface.get_width() // 2, 40))
+    # Scelta del colore: verde normalmente, rosso negli ultimi 10 secondi
+    color = COLOR_RED if time_left <= 10 else COLOR_GREEN
+    
+    # Disegno sfondo bianco
+    bg_rect = pygame.Rect(x, y, max_width, height)
+    pygame.draw.rect(surface, COLOR_WHITE, bg_rect, border_radius=15)
+    
+    # Disegno barra del tempo rimasto
+    if current_width > 0:
+        fill_rect = pygame.Rect(x, y, current_width, height)
+        # Se la barra è molto corta, potremmo avere problemi con il raggio se è maggiore della larghezza
+        # ma pygame lo gestisce internamente.
+        pygame.draw.rect(surface, color, fill_rect, border_radius=15)
+        
+    # Disegno bordo nero
+    pygame.draw.rect(surface, COLOR_BLACK, bg_rect, 2, border_radius=15)
+    
+    # Testo dei secondi rimanenti al centro
+    font = pygame.font.Font("fonts/Ubuntu-Italic.ttf", 20)
+    text_surf = font.render(f"Tempo: {int(time_left)}s", True, COLOR_BLACK)
+    text_rect = text_surf.get_rect(center=bg_rect.center)
     surface.blit(text_surf, text_rect)
 
 def draw_results(surface: pygame.Surface, score: int, correct: int, wrong: int):
@@ -73,17 +95,17 @@ def draw_results(surface: pygame.Surface, score: int, correct: int, wrong: int):
         accuracy = 0.0
 
     # Font
-    font_title = pygame.font.SysFont("Arial", 48, bold=True)
-    font_text = pygame.font.SysFont("Arial", 32)
-    font_small = pygame.font.SysFont("Arial", 24, italic=True)
+    font_title = pygame.font.Font("fonts/Ubuntu-Bold.ttf", 48)
+    font_text = pygame.font.Font("fonts/Ubuntu-Regular.ttf", 32)
+    font_small = pygame.font.Font("fonts/Ubuntu-Italic.ttf", 24)
 
     # Scritte
-    title_surf = font_title.render("TEMPO SCADUTO!", True, (255, 200, 50)) # Giallo/Arancio
-    score_surf = font_text.render(f"Punteggio Finale: {score}", True, (255, 255, 255))
-    correct_surf = font_text.render(f"Corrette: {correct}", True, (255, 255, 255))
-    wrong_surf = font_text.render(f"Errate: {wrong}", True, (255, 255, 255))
-    acc_surf = font_text.render(f"Accuratezza: {accuracy:.1f}%", True, (255, 255, 255))
-    restart_surf = font_small.render("Premi R per rigiocare", True, (150, 150, 150)) # Grigio
+    title_surf = font_title.render("TEMPO SCADUTO!", True, COLOR_RED) # Rosso
+    score_surf = font_text.render(f"Punteggio Finale: {score}", True, COLOR_WHITE)
+    correct_surf = font_text.render(f"Corrette: {correct}", True, COLOR_WHITE)
+    wrong_surf = font_text.render(f"Errate: {wrong}", True, COLOR_WHITE)
+    acc_surf = font_text.render(f"Accuratezza: {accuracy:.1f}%", True, COLOR_WHITE)
+    restart_surf = font_small.render("Premi R per rigiocare", True, COLOR_GREY) # Grigio
 
     # Posizionamento e rendering sullo schermo
     # Posizioniamo tutto al centro, con diverse altezze (Y)
@@ -95,18 +117,31 @@ def draw_results(surface: pygame.Surface, score: int, correct: int, wrong: int):
     surface.blit(acc_surf, acc_surf.get_rect(center=(center_x, 340)))
     surface.blit(restart_surf, restart_surf.get_rect(center=(center_x, 450)))
 
-def draw_rules(surface: pygame.Surface):
+def draw_rules(surface: pygame.Surface, trial: Trial):
     """
-    Disegna le regole del gioco sullo schermo
-    
+    Disegna la regola del gioco sullo schermo
+
     Args:
         surface: La superficie di disegno
+        trial: La carta da disegnare
     """
-    x = surface.get_width() // 2
-    y = 70
+    # avrà la stessa y delle card 
+    # se è sopra, sarà a destra della card, altrimenti a sinistra
+    if trial.position.upper() == "TOP":
+        x = 900
+        y = surface.get_height() - RULES_H - 450
+    else:
+        x = 50
+        y = surface.get_height() - RULES_H - 160
+    card_rect = pygame.Rect(x, y, RULES_W, RULES_H)
 
-    font_text = pygame.font.SysFont("Arial", 15)
-    message = f"Premi freccia destra se la carta è in alto e il numero è pari, altrimenti premi freccia sinistra"
-    text_surf = font_text.render(message, True, (255, 255, 255))
-    text_rect = text_surf.get_rect(center=(x, y))
+    color = COLOR_WHITE
+
+    pygame.draw.rect(surface, color, card_rect, border_radius=15)
+    pygame.draw.rect(surface, COLOR_BLACK, card_rect, 3, border_radius=15)
+
+    font = pygame.font.Font("fonts/Ubuntu-Italic.ttf", 25)
+    text_str = f"Il numero è pari?" if trial.position.upper() == "TOP" else f"La lettera è una vocale?"
+    text_surf = font.render(text_str, True, COLOR_BLACK)
+    text_rect = text_surf.get_rect(center=card_rect.center)
     surface.blit(text_surf, text_rect)
