@@ -1,75 +1,87 @@
 # Architettura
 
-> Qui spiegate **come è fatto dentro** il progetto. Non ripetete il testo della specifica: scrivete cosa avete fatto voi, come lo avete organizzato, e perché.
-
 ## Decomposizione in moduli
 
-Per ciascun modulo del vostro progetto, una-due righe:
+- `main.py` — Entry point e game loop principale; gestisce lo stato generale, il flusso temporale e l'input.
+- `config.py` — Centralizza tutte le costanti (colori, dimensioni schermo, parametri di punteggio, seed).
+- `models.py` — Contiene le definizioni delle strutture dati di base tramite `dataclass` (es. `Trial`).
+- `rules.py` — Modulo puro che incapsula la logica delle regole di gioco (controllo vocali e numeri pari).
+- `scoring.py` — Modulo puro che determina l'aggiornamento del punteggio.
+- `generator.py` — Gestisce la creazione pseudocasuale dei Trial basandosi sulle regole.
+- `ui.py` — Modulo interamente dedicato al rendering (disegno di carte, timer e testi con Pygame).
 
-- `main.py` — …
-- `config.py` — …
-- `models.py` — …
-- `rules.py` — …
-- `scoring.py` — …
-- `generator.py` — …
-- `states.py` — …
-- `ui.py` — …
-- `input_handler.py` — …
-
-Se avete aggiunto/rimosso moduli rispetto alla struttura suggerita, spiegate perché.
+**Note sui moduli rimossi/modificati**: Non abbiamo utilizzato un modulo `states.py` dedicato. Avendo mantenuto un numero ristretto di stati (solo `PLAYING` e `RESULTS`), abbiamo preferito gestire le transizioni direttamente nel game loop di `main.py` tramite una semplice stringa per evitare di complicare il progetto inutilmente.
 
 ## Separazione logica / presentazione
 
-Quali moduli sono "puri" (non importano pygame)? Quali sono legati al rendering? Come comunicano fra loro?
-
-Se avete fatto scelte non ovvie (es. passare lo stato come parametro invece che come variabile globale), spiegate il ragionamento.
+Abbiamo isolato la logica in **moduli "puri"** che non hanno alcuna dipendenza da `pygame`. Questi sono `rules.py`, `scoring.py`, `generator.py` e `models.py`. Possono essere testati e chiamati in qualsiasi contesto Python standard.
+Al contrario, **`ui.py` è il modulo dedicato al rendering**. Prende in input le informazioni di stato e dati puri (come le istanze di `Trial` o i secondi rimanenti) e disegna a schermo le forme geometriche e i testi.
+Il `main.py` funge da **Controller**: cattura l'input dall'utente, invoca i moduli puri per l'aggiornamento logico e, infine, passa i dati aggiornati ad `ui.py` per la visualizzazione.
 
 ## Macchina a stati
 
-Diagramma della macchina a stati (Mermaid va benissimo, è supportato da GitHub):
+Diagramma della macchina a stati:
 
 ```mermaid
 stateDiagram-v2
-    [*] --> INTRO
-    INTRO --> PLAYING: premo Start
-    PLAYING --> PAUSED: premo P
-    PAUSED --> PLAYING: premo P
-    PLAYING --> RESULTS: scade il timer
-    RESULTS --> PLAYING: premo R
-    RESULTS --> [*]: premo ESC
+    [*] --> PLAYING: Avvio app
+    PLAYING --> RESULTS: scade il timer (60s)
+    RESULTS --> PLAYING: premo R (resetta variabili)
+    PLAYING --> [*]: chiudo o premo ESC
+    RESULTS --> [*]: chiudo o premo ESC
 ```
 
-Spiegate brevemente ciascuno stato: cosa fa, cosa disegna, quali input ascolta, verso quali stati può transire.
+- **PLAYING**: Stato in cui si svolge l'azione di gioco. Disegna il timer, le istruzioni (se applicabile) e la carta a schermo (mostrando anche il feedback cromatico per 0.15s). Ascolta gli input delle frecce (Destra/Sinistra) per rispondere, ed ESC per uscire.
+- **RESULTS**: Stato di fine sessione. Disegna le statistiche (punteggio finale, risposte giuste/sbagliate e accuratezza). Ascolta il tasto `R` per riavviare una nuova partita azzerando timer e contatori, e il tasto ESC per chiudere.
 
 ## Flusso di un trial
 
-Descrivete il ciclo di vita di un singolo trial, dall'istante in cui il generatore lo crea all'istante in cui viene archiviato nelle statistiche. Dove nasce? Come viene valutato? Chi aggiorna lo scoring? Chi attiva il feedback?
+Descrizione del ciclo di vita:
+1. In `main.py` viene chiamato `generate_trial(rng)` per ottenere un nuovo Trial.
+2. In `generator.py`, posizioni, lettere e numeri sono scelti casualmente. Il generatore invoca `compute_expected_answer` (`rules.py`) per stabilire la risposta corretta.
+3. Il `Trial` è ritornato al `main.py` e visualizzato da `ui.py` finché l'utente non preme una freccia.
+4. Premuta la freccia, in `main.py` si confronta l'input con `expected_answer`.
+5. Si calcola il nuovo punteggio con `apply_answer` in `scoring.py`.
+6. Si setta `feedback_until` e `ui.py` colora la carta di rosso/verde per `0.15` secondi.
+7. Al termine del tempo di feedback, si rigenera un nuovo `Trial`.
 
-Un diagramma di sequenza Mermaid aiuta molto qui.
+```mermaid
+sequenceDiagram
+    participant Main
+    participant Gen as generator
+    participant Rules as rules
+    participant Score as scoring
+    participant UI as ui
+
+    Main->>Gen: generate_trial(rng)
+    Gen->>Rules: compute_expected_answer()
+    Rules-->>Gen: expected_answer
+    Gen-->>Main: Trial (oggetto)
+    loop Game Loop
+        Main->>UI: draw_card(Trial, is_correct=None)
+        note over Main: L'utente preme Freccia DX/SX
+    end
+    Main->>Score: apply_answer(score, is_correct)
+    Score-->>Main: new_score
+    Main->>UI: draw_card(Trial, is_correct=True/False)
+    note over Main: Attesa FEEDBACK_DURATION (0.15s)
+    Main->>Gen: generate_trial(rng)
+```
 
 ## Dati principali
 
-Le vostre `dataclass` principali (`Trial`, `ScoringState`, `SessionStats`): cosa contengono, chi le crea, chi le modifica.
+Al momento utilizziamo una singola `dataclass` esplicita:
+- **`Trial`**: Si trova in `models.py` e contiene la posizione (TOP/BOTTOM), lettera, numero e la risposta attesa. Viene creata da `generator.py` ed è in sola lettura.
 
 ## Scoring: come è implementato
 
-Due righe di riassunto del sistema (meter, moltiplicatore, bonus) e riferimento al file dove sta il codice. Non ripetete la formula della specifica — spiegate come l'avete tradotta in codice voi.
+Il sistema di punteggio è volutamente basico, definito come funzione pura in `scoring.py`. Non utilizza moltiplicatori o "meter". Alla pressione di un tasto, se la risposta è corretta vengono sommati punti prefissati (`POINTS_CORRECT`); se è errata, vengono sottratti punti (`POINTS_WRONG`). Il minimo è sempre bloccato a 0 tramite la funzione `max(0, new_score)`.
 
 ## Generatore: bilanciamento e seed
 
-- Come evitate streak lunghe?
-- Come bilanciate YES/NO?
-- Come funziona il seed? Come lo testate?
+- **Seed**: Usiamo un generatore isolato `rng = random.Random(SEED)` dove `SEED` è definito in `config.py`. Questo garantisce riproducibilità nelle prove e semplicità di testing.
+- **Bilanciamento**: Come specificato in `scelte.md`, ci affidiamo interamente alla casualità per le lettere e i numeri e anche per evitare streak. Non abbiamo implementato controlli rigorosi per bilanciare YES/NO o le ripetizioni prolungate.
 
 ## Fading istruzioni
 
-Come è implementato tecnicamente? Dove vive la variabile «quante risposte corrette finora»? Chi la aggiorna? Come si trasforma in opacità?
-
----
-
-### Domande-guida
-
-1. Se un compagno apre il progetto per la prima volta, capisce dove cercare cosa?
-2. Avete spiegato **perché** le vostre scelte, o solo **cosa** avete fatto?
-3. I diagrammi Mermaid si aprono correttamente su GitHub? (Verificate nel browser.)
-4. Qualcuno che legge solo questa pagina riesce a farsi un'idea corretta dell'architettura?
+Non abbiamo implementato un fading ad "opacità" progressiva per mancanza di tempo. Dal punto di vista tecnico, ci siamo basati su un interruttore booleano on/off. La variabile `correct_answers` vive in `main.py` e si aggiorna ad ogni risposta esatta. Nel main loop c'è un semplice controllo if (`if correct_answers < 10:`), il quale determina se chiamare la funzione `draw_rules()` per renderizzare a schermo le istruzioni.
