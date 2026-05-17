@@ -1,85 +1,84 @@
-# Scelte implementative
+# Documentazione delle Scelte Progettuali
 
-> Qui va la parte più **metacognitiva** del progetto: cosa avete scelto, perché, cosa avete scartato. Non può essere scritta dall'IA — è il ragionamento che mostra che avete capito quello che avete fatto.
+## Struttura del progetto
 
-## Scelte rilevanti
+* **Scelta:** Dividere il progetto in moduli (`main.py`, `ui.py`, `generator.py`, `scoring.py`, `rules.py`, `models.py`, `config.py`).
 
-Per ciascuna scelta non banale che avete fatto, scrivete:
+* **Perché:** Più facile capire, testare e modificare singole parti; `rules.py` è logica pura, `ui.py` solo rendering.
 
-1. **Cosa**: la scelta in una riga.
-2. **Perché**: la ragione. Vincoli? Pregi? Abitudine?
-3. **Alternative considerate**: almeno una alternativa che avete valutato e scartato.
-4. **Conseguenze**: cosa è diventato facile e cosa è diventato difficile per colpa di questa scelta.
+* **Alternative considerate:** Nessuna alternativa considerata.
 
-### Esempio di formato
+* **Conseguenze:** Nessuna.
 
-**Scelta**: rappresentiamo la posizione della carta con un `Enum` (`Position.TOP`, `Position.BOTTOM`) invece che con una stringa.
+## Scoring
 
-**Perché**: autocompletamento nell'IDE, impossibile passare un valore errato per sbaglio, codice più leggibile nei `match`.
+* **Scelta:** Funzione pura `apply_answer(score, is_correct) -> new_score` in `scoring.py`.
 
-**Alternative considerate**: stringhe ("top", "bottom"). Scartata perché troppo facile scrivere "Top" invece di "top" e introdurre un bug silenzioso.
+* **Perché:** Semplicità, testabilità e nessun effetto collaterale.
 
-**Conseguenze**: un import in più nei moduli che usano la posizione; nessuno svantaggio concreto.
+* **Alternative considerate:** Dataclass mutabile per lo stato del punteggio. Scartata per non introdurre complessità.
 
----
+* **Conseguenze:** Facilità di test; leggero overhead nel passare il punteggio.
 
-## Sezioni da trattare
+## Generatore
 
-Non dovete coprire tutte queste sezioni in modo rigido: sceglietene le più rilevanti per il vostro progetto e approfonditele.
+* **Scelta:** Usare `random.Random(SEED)` passato a `generate_trial(rng)`; generazione con `rng.choice`/`rng.randint`, senza bilanciamento attivo.
 
-### Struttura del progetto
+* **Perché:** Riproducibilità e codice semplice.
 
-Perché quella decomposizione in moduli? Avete valutato un'unica libreria `game.py`?
+* **Alternative considerate:** Rigenerare trials sbilanciati o post-processare la lista per bilanciarla. Scartata per semplicità e tempo.
 
-### Scoring
+* **Conseguenze:** Sessioni riproducibili; possibili sbilanciamenti casuali accettabili per la demo.
 
-Come avete tradotto la formula della specifica in codice? `dict` mutabile, `dataclass` mutabile, funzioni pure che restituiscono un nuovo stato?
+## Gestione del tempo
 
-### Generatore
+* **Scelta:** Usare `time.time()` per misurare elapsed e confrontarlo con `GAME_DURATION`.
 
-Che algoritmo usate per bilanciare YES/NO? Rigenerate i trial sbilanciati o aggiustate dopo? Come gestite il seed?
+* **Perché:** Semplice, preciso per il nostro caso e facile da testare fuori da Pygame.
 
-### Gestione del tempo
+* **Alternative considerate:** `pygame.time.get_ticks()` o misurare delta con `Clock.tick()`. Scartate per chiarezza.
 
-Come tenete traccia del timer di sessione? `time.time()`, `pygame.time.get_ticks()`, `Clock`? Perché?
+* **Conseguenze:** Codice leggibile; test più semplice.
 
-### Inter-trial interval
+## Inter-trial interval
 
-Come lo realizzate senza bloccare il main loop? Variabile di stato + timer? Timestamp della prossima transizione?
+* **Scelta:** Variabile `feedback_until` con timestamp oltre il quale si accetta la prossima risposta.
 
-### Input
+* **Perché:** Evita `sleep()` e mantiene il main loop reattivo.
 
-Se avete input multipli, come li normalizzate? Dove avviene la normalizzazione?
+* **Alternative considerate:** Stato `PAUSED` o contatore di frame. Scartato per semplicità.
 
-### Feedback visivo
+* **Conseguenze:** Implementazione non bloccante e leggibile; richiede gestire correttamente la variabile di stato.
 
-Come evitate che le animazioni rallentino il loop? Se è un'animazione "a tempo" come la gestite (stato + timestamp)?
+## Input
 
-### Fading istruzioni
+* **Scelta:** Normalizzare l'input su valori booleani (freccia destra = True, sinistra = False) all'evento.
 
-Interpolazione lineare, soglie discrete, funzione ease? Come l'avete implementato?
+* **Perché:** Mappatura semantica semplice; resto del codice lavora su valori chiari.
 
-### Asset grafici / audio
+* **Alternative considerate:** Un modulo `input_handler.py` per tradurre eventi. Scartato perché la mappatura è breve.
 
-Se ne avete usati, da dove vengono? Licenza? Come li caricate (a init, a richiesta)?
+* **Conseguenze:** Codice lineare; se aggiungiamo altri input (touch/gamepad) servirà refactor.
 
----
+## Feedback visivo
+
+* **Scelta:** Colorare la carta (verde/rosso) per `FEEDBACK_DURATION` usando `last_answer_correct` + `feedback_until`.
+
+* **Perché:** Semplice da implementare e non rallenta il loop.
+
+* **Alternative considerate:** Animazioni frame-by-frame con interpolazione. Scartata per complessità/tempo.
+
+* **Conseguenze:** Feedback reattivo; manca fluidità animata più sofisticata.
+
+## Fading istruzioni
+
+* **Scelta:** Soglia semplice: mostrare le regole finché `correct_answers < 10`; nessun fading graduale implementato.
+
+* **Perché:** Funzionalità affidabile e testabile; fading estetico non essenziale per la demo.
+
+* **Alternative considerate:** Interpolazione lineare dell'alpha in base a `correct_answers` (es. `alpha = clamp((10-correct)/10,0,1)`). Scartata per mancanza di tempo.
+
+* **Conseguenze:** Comportamento prevedibile; perdita di una transizione estetica.
 
 ## Cosa non siamo riusciti a fare e perché
-
-Parte importante. Onestà, non scuse.
-
-- cosa avete lasciato fuori
-- cosa avete iniziato e poi abbandonato
-- cosa sapete che è fatto male ma non abbiamo avuto tempo di sistemare
-
-Riconoscere i limiti del proprio progetto è una competenza professionale, non una debolezza.
-
----
-
-### Domande-guida
-
-1. Un lettore capisce **perché** le cose sono come sono, o solo **come** sono?
-2. Ogni scelta descritta ha almeno un'alternativa scartata?
-3. Avete evitato frasi tipo «abbiamo scelto così perché è il modo migliore»? (Non è una spiegazione.)
-4. Questa pagina è scritta da voi, con il vostro stile, o sembra l'output di un'IA?
+* Non abbiamo implementato un fading graduale delle istruzioni (previsto ma sacrificato per tempistiche).
