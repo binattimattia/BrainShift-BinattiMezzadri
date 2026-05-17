@@ -1,72 +1,86 @@
 # Brain Shift — progetto di gruppo
 
-> Questa è la prima pagina che vede chi apre il vostro repository. Deve essere chiara, pulita, utile. Niente fuffa.
-
 ## Chi siamo
 
 - Mattia Binatti — binattimattia@gmail.com / @binattimattia
 - Jason Mezzadri — mezzadrijason@gmail.com / @JasonMezzadri
 
-Classe 4A Informatica — a.s. 2025-26.
+Istituto Tecnico IIS JC Maxwell — Classe 4A Informatica — a.s. 2025-26
 
 ## Cos'è Brain Shift
 
-Scrivete 3-5 righe che spiegano il gioco a qualcuno che non l'ha mai visto. Non copia-incollate dalla specifica, riscrivete a parole vostre. Se non riuscite a riassumerlo, non l'avete capito.
+**Brain Shift** è un frenetico gioco di *rapid task-switching* progettato per testare i tuoi riflessi mentali. Ad ogni turno apparirà sullo schermo una carta contenente una lettera e un numero. La sfida sta nel fatto che la regola per rispondere cambia continuamente in base alla posizione della carta:
+- Se la carta appare in **alto**, devi chiederti: *"Il numero è pari?"*
+- Se la carta appare in **basso**, devi chiederti: *"La lettera è una vocale?"*
+
+Hai 60 secondi per adattarti ai continui cambi di regola e totalizzare il punteggio più alto possibile!
 
 ## Come giocare
 
-Istruzioni minime ma complete per far partire il gioco da clone pulito:
+Istruzioni per avviare il gioco da clone pulito:
 
 ```bash
-git clone <URL-del-vostro-repo>
-cd <nome-cartella>
+git clone https://github.com/binattimattia/BrainShift-BinattiMezzadri.git
+
+cd BrainShift-BinattiMezzadri
+
+python -m venv venv
+
+# Su Windows:
+venv\Scripts\activate
+# Su macOS/Linux:
+source venv/bin/activate
+
 pip install -r requirements.txt
+
 python main.py
 ```
 
-Specificate:
-
-- versione Python richiesta (es. Python 3.11+)
-- versione pygame richiesta
-- altre dipendenze se ce ne sono
+- versione Python richiesta Python 3.11+ (la versione 3.14 non è ancora supportata da pygame)
+- versione pygame richiesta pygame==2.6.1
+- versione pytest richiesta pytest==8.4.2
 
 ## Controlli
 
-- ← freccia sinistra: …
-- → freccia destra: …
-- … (eventuale mouse, pausa, ecc.)
+- ← freccia sinistra: Risposta falsa
+- → freccia destra: Risposta vera
+- ESC: Chiude il gioco
+- X sulla finestra: Chiude il gioco
+- R: Riavvia la partita (solo quando finisce la partita)
 
-## Screenshot
+## Preview del gioco
 
-Uno o due screenshot del gioco (anche solo immagini PNG nella cartella `docs/img/`). Aiutano molto chi apre il repo. Una GIF animata è ancora meglio.
+![Gameplay del gioco](docs/img/gameplay-preview.gif)
+
+![Risultati](docs/img/final-score-preview.png)
 
 ## Struttura del repository
 
-Breve spiegazione di dove sta cosa:
+L'architettura del progetto segue il paradigma Model-View-Controller (MVC):
 
+```text
+BrainShift-BinattiMezzadri/
+├── main.py           ← (Controller) Entry point, gestione degli eventi e ciclo vitale
+├── config.py         ← Costanti, colori, dimensioni finestra e bilanciamento
+├── models.py         ← (Model) Strutture dei dati tramite dataclass (Trial)
+├── rules.py          ← (Model) Logica pura delle regole e risposta attesa
+├── scoring.py        ← (Model) Modulo di attribuzione punteggi per risposte
+├── generator.py      ← Motore casuale di generazione dei Trial
+├── ui.py             ← (View) Rendering a schermo di Carte, Timer, Testi e Menu
+├── fonts/            ← Asset grafici (font TrueType)
+├── docs/             ← Documentazione tecnica del progetto e Devlog
+└── tests/            ← Test Unitari (pytest) per verificare il core engine
 ```
-brain_shift/
-├── main.py           ← entry point
-├── rules.py          ← logica regole
-├── scoring.py        ← sistema scoring
-├── ...
-├── docs/             ← documentazione
-└── tests/            ← test pytest
-```
+
+## Documentazione
+
+Tutti i dettagli tecnici sulle implementazioni e lo sviluppo sono consultabili nei seguenti file:
+- [Architettura del progetto](docs/architettura.md)
+- [Scelte Tecniche](docs/scelte.md)
+- [Devlog (Diario di Sviluppo)](docs/devlog.md)
 
 ## Come lanciare i test
 
 ```bash
-pytest tests/
+python -m pytest tests/test_rules.py
 ```
-
----
-
-### Domande-guida per questa pagina
-
-Non vanno lasciate nel file finale, servono solo a voi per capire cosa scrivere.
-
-1. Se un vostro compagno di un'altra classe apre questo repo, capisce in 30 secondi cosa fa il gioco?
-2. Le istruzioni di setup sono abbastanza specifiche da funzionare sul suo computer?
-3. C'è almeno uno screenshot o una GIF?
-4. Tutti i link ad altre pagine di `docs/` sono validi?
