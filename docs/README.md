@@ -50,9 +50,9 @@ python main.py
 
 ## Preview del gioco
 
-![Gameplay del gioco](docs/img/gameplay-preview.gif)
+![Gameplay del gioco](img/gameplay-preview.gif)
 
-![Risultati](docs/img/final-score-preview.png)
+![Risultati](img/final-score-preview.png)
 
 ## Struttura del repository
 
