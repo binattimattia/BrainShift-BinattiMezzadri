@@ -75,9 +75,9 @@ BrainShift-BinattiMezzadri/
 ## Documentazione
 
 Tutti i dettagli tecnici sulle implementazioni e lo sviluppo sono consultabili nei seguenti file:
-- [Architettura del progetto](docs/architettura.md)
-- [Scelte Tecniche](docs/scelte.md)
-- [Devlog (Diario di Sviluppo)](docs/devlog.md)
+- [Architettura del progetto](architettura.md)
+- [Scelte Tecniche](scelte.md)
+- [Devlog (Diario di Sviluppo)](devlog.md)
 
 ## Come lanciare i test
 
