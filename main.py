@@ -79,8 +79,7 @@ def main():
             else:
                 draw_card(screen, trial, None)
             
-            if correct_answers < 10:
-                draw_rules(screen, trial)
+            draw_rules(screen, trial, correct_answers)
             
             draw_timer(screen, elapsed)
         elif state == "RESULTS":

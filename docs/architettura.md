@@ -84,4 +84,6 @@ Il sistema di punteggio è volutamente basico, definito come funzione pura in `s
 
 ## Fading istruzioni
 
-Non abbiamo implementato un fading ad "opacità" progressiva per mancanza di tempo. Dal punto di vista tecnico, ci siamo basati su un interruttore booleano on/off. La variabile `correct_answers` vive in `main.py` e si aggiorna ad ogni risposta esatta. Nel main loop c'è un semplice controllo if (`if correct_answers < 10:`), il quale determina se chiamare la funzione `draw_rules()` per renderizzare a schermo le istruzioni.
+Abbiamo implementato un fading progressivo basato sull'opacità (`alpha`). La variabile `correct_answers` vive in `main.py` (Controller) e viene costantemente passata alla funzione `draw_rules()` di `ui.py`.
+Dal punto di vista tecnico, il modulo di view applica dei livelli di trasparenza hardcoded in una tabella (100%, 70%, 40%, 0%). Poiché `pygame` non può applicare trasparenze dirette e primitive geometriche in modo standard su schermi normali, creiamo ad ogni frame una `pygame.Surface` temporanea con il flag `SRCALPHA`, vi disegniamo sopra e applichiamo l'opacità con `set_alpha()`, prima di copiare (blit) questa superficie sullo schermo principale. Oltre le 11 risposte corrette l'opacità scende allo 0% e la renderizzazione viene bloccata del tutto con un early-return per salvare risorse grafiche.
+

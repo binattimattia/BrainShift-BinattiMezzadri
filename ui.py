@@ -117,31 +117,48 @@ def draw_results(surface: pygame.Surface, score: int, correct: int, wrong: int):
     surface.blit(acc_surf, acc_surf.get_rect(center=(center_x, 340)))
     surface.blit(restart_surf, restart_surf.get_rect(center=(center_x, 450)))
 
-def draw_rules(surface: pygame.Surface, trial: Trial):
+def draw_rules(surface: pygame.Surface, trial: Trial, correct: int):
     """
     Disegna la regola del gioco sullo schermo
-
+    
     Args:
         surface: La superficie di disegno
         trial: La carta da disegnare
+        correct: Il numero di risposte corrette finora
     """
-    # avrà la stessa y delle card 
-    # se è sopra, sarà a destra della card, altrimenti a sinistra
+    # Opacità
+    if correct <= 3:
+        opacity = 255
+    elif correct <= 7:
+        opacity = int(255 * 0.70)
+    elif correct <= 11:
+        opacity = int(255 * 0.40)
+    else:
+        return
+
+    # Superficie temporanea trasparente
+    rule_surface = pygame.Surface((RULES_W, RULES_H), pygame.SRCALPHA)
+
+    # Sfondo e bordo 
+    pygame.draw.rect(rule_surface, COLOR_WHITE, rule_surface.get_rect(), border_radius=15)
+    pygame.draw.rect(rule_surface, COLOR_BLACK, rule_surface.get_rect(), 3, border_radius=15)
+
+    # Disegna il testo
+    font = pygame.font.Font("fonts/Ubuntu-Italic.ttf", 25)
+    text_str = "Il numero è pari?" if trial.position.upper() == "TOP" else "La lettera è una vocale?"
+    text_surf = font.render(text_str, True, COLOR_BLACK)
+    text_rect = text_surf.get_rect(center=rule_surface.get_rect().center)
+    rule_surface.blit(text_surf, text_rect)
+
+    # Applica l'opacità all'intera superficie
+    rule_surface.set_alpha(opacity)
+
+    # Calcola la posizione sullo schermo principale
     if trial.position.upper() == "TOP":
         x = 900
         y = surface.get_height() - RULES_H - 450
     else:
         x = 50
         y = surface.get_height() - RULES_H - 160
-    card_rect = pygame.Rect(x, y, RULES_W, RULES_H)
 
-    color = COLOR_WHITE
-
-    pygame.draw.rect(surface, color, card_rect, border_radius=15)
-    pygame.draw.rect(surface, COLOR_BLACK, card_rect, 3, border_radius=15)
-
-    font = pygame.font.Font("fonts/Ubuntu-Italic.ttf", 25)
-    text_str = f"Il numero è pari?" if trial.position.upper() == "TOP" else f"La lettera è una vocale?"
-    text_surf = font.render(text_str, True, COLOR_BLACK)
-    text_rect = text_surf.get_rect(center=card_rect.center)
-    surface.blit(text_surf, text_rect)
+    surface.blit(rule_surface, (x, y))

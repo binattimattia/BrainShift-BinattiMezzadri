@@ -72,13 +72,13 @@
 
 ## Fading istruzioni
 
-* **Scelta:** Soglia semplice: mostrare le regole finché `correct_answers < 10`; nessun fading graduale implementato.
+* **Scelta:** Fading progressivo dell'opacità (alpha blending) in base al numero di `correct_answers`. La funzione `draw_rules` in `ui.py` calcola il livello di alpha (255, 70%, 40%, 0%) tramite una superficie temporanea `SRCALPHA`.
 
-* **Perché:** Funzionalità affidabile e testabile; fading estetico non essenziale per la demo.
+* **Perché:** Migliora l'esperienza dell'utente e l'estetica, offrendo al giocatore una transizione morbida invece di un'improvvisa scomparsa del testo. Rende il progetto completo in un obiettivo avanzato richiesto dalla traccia.
 
-* **Alternative considerate:** Interpolazione lineare dell'alpha in base a `correct_answers` (es. `alpha = clamp((10-correct)/10,0,1)`). Scartata per mancanza di tempo.
+* **Alternative considerate:** Un semplice interruttore on/off (`if correct_answers < 10`) utilizzato nella prima bozza. Scartato in favore di un effetto visivo migliore e completo.
 
-* **Conseguenze:** Comportamento prevedibile; perdita di una transizione estetica.
+* **Conseguenze:** Transizione più gradevole e professionale; l'utilizzo di una surface temporanea con `set_alpha` ha un costo di prestazioni impercettibile, ma giustificato per l'effetto richiesto.
 
 ## Cosa non siamo riusciti a fare e perché
-* Non abbiamo implementato un fading graduale delle istruzioni (previsto ma sacrificato per tempistiche).
+* Abbiamo sacrificato la gestione di uno scoring con "meter" e moltiplicatori (obiettivo avanzato) preferendo invece un sistema di base più robusto e facile da debuggare per via delle tempistiche ristrette.
